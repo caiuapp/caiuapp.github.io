@@ -16,47 +16,50 @@ img{max-width:100%}
 <style>
 /* Layout: cabeçalho simples, hero com texto e gráfico de exemplo lado a lado, passos em sequência, três vantagens em colunas. */
 :root {
-  --bg: #F3F5F7;
+  --bg: #F4EAFB;
   --surface: #FFFFFF;
-  --fg: #121C26;
-  --muted: #53616E;
-  --line: #D5DCE3;
-  --accent: #0A6E63;
-  --accent-soft: #D9EEE9;
-  --tag: #F2B84B;
-  --tag-ink: #2A1D03;
+  --fg: #3B2147;
+  --muted: #7A6585;
+  --line: #EAD9F3;
+  --accent: #B03F78;
+  --accent-soft: #FBD9E8;
+  --tag: #FFF1C9;
+  --tag-ink: #6B4E00;
   --display: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
   --body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0E151B;
-    --surface: #16202A;
-    --fg: #E8EEF3;
-    --muted: #9AA9B7;
-    --line: #2A3743;
-    --accent: #46C2A8;
-    --accent-soft: #14352F;
-    --tag: #E0A93B;
-    --tag-ink: #1A1405;
+    --bg: #2A1B33;
+    --surface: #372541;
+    --fg: #F6ECFA;
+    --muted: #C9B5D4;
+    --line: #4D3759;
+    --accent: #F29BC3;
+    --accent-soft: #4A2A43;
+    --tag: #F5D88A;
+    --tag-ink: #3A2A00;
+    --grad-end: #1F2A2A;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0E151B;
-  --surface: #16202A;
-  --fg: #E8EEF3;
-  --muted: #9AA9B7;
-  --line: #2A3743;
-  --accent: #46C2A8;
-  --accent-soft: #14352F;
-  --tag: #E0A93B;
-  --tag-ink: #1A1405;
+  --bg: #2A1B33;
+  --surface: #372541;
+  --fg: #F6ECFA;
+  --muted: #C9B5D4;
+  --line: #4D3759;
+  --accent: #F29BC3;
+  --accent-soft: #4A2A43;
+  --tag: #F5D88A;
+  --tag-ink: #3A2A00;
   color-scheme: dark;
 }
 body {
   background: var(--bg);
+  background-image: linear-gradient(160deg, var(--accent-soft) 0%, var(--bg) 45%, var(--grad-end, #E3F3EC) 100%);
+  background-attachment: fixed;
   color: var(--fg);
   font-family: var(--body);
   font-size: 17px;
@@ -68,6 +71,8 @@ body {
 header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .brand { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
 .brand span { color: var(--accent); }
+.abrir { display: inline-block; margin-top: 20px; background: #F7C1D8; color: #5A1F45; font-family: var(--display); font-weight: 700; font-size: 18px; padding: 14px 28px; border-radius: 999px; text-decoration: none; }
+.abrir:hover { background: #F3AFCB; }
 .status {
   font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase;
   border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 4px 12px;
@@ -77,7 +82,7 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .hero > * { min-width: 0; }
 h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 6vw, 48px); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 16px; text-wrap: balance; }
 .lede { color: var(--muted); font-size: 19px; margin: 0; max-width: 60ch; }
-.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 16px; }
 .chart svg { display: block; width: 100%; height: auto; }
 .chart figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; }
 .c-grid { stroke: var(--line); stroke-width: 1; fill: none; }
@@ -97,7 +102,7 @@ p { margin: 0; }
 .steps p, .adv p { color: var(--muted); }
 .adv-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
 @media (min-width: 820px) { .adv-grid { grid-template-columns: repeat(3, 1fr); } }
-.adv { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 0; }
+.adv { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 20px; min-width: 0; }
 .tag {
   display: inline-block; font-family: var(--mono); font-weight: 500; font-size: 13px;
   background: var(--tag); color: var(--tag-ink); padding: 2px 8px; border-radius: 4px; margin-bottom: 12px;
@@ -117,6 +122,7 @@ footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--mute
     <div>
       <h1>Avisa quando o preço chega onde você quer.</h1>
       <p class="lede">O CaiuApp é um aplicativo brasileiro para Android e iOS que acompanha preços em marketplaces e lojas virtuais. O consumidor escolhe uma categoria, um produto genérico ou um produto específico, define o preço-alvo e recebe um alerta quando ele é atingido.</p>
+      <a class="abrir" href="/app/">Experimentar o app →</a>
     </div>
     <figure class="chart" style="margin:0">
       <svg viewBox="0 0 360 180" role="img" aria-label="Exemplo de preço caindo de R$ 500 para R$ 389 e cruzando o preço-alvo de R$ 400">
