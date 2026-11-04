@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CaiuApp</title>
+<meta name="description" content="CaiuApp: aplicativo brasileiro que acompanha preços e avisa quando o produto chega ao preço-alvo.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Schibsted+Grotesk:wght@600;700&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0}
+img{max-width:100%}
+</style>
+<style>
+/* Layout: cabeçalho simples, hero com texto e gráfico de exemplo lado a lado, passos em sequência, três vantagens em colunas. */
+:root {
+  --bg: #F3F5F7;
+  --surface: #FFFFFF;
+  --fg: #121C26;
+  --muted: #53616E;
+  --line: #D5DCE3;
+  --accent: #0A6E63;
+  --accent-soft: #D9EEE9;
+  --tag: #F2B84B;
+  --tag-ink: #2A1D03;
+  --display: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E151B;
+    --surface: #16202A;
+    --fg: #E8EEF3;
+    --muted: #9AA9B7;
+    --line: #2A3743;
+    --accent: #46C2A8;
+    --accent-soft: #14352F;
+    --tag: #E0A93B;
+    --tag-ink: #1A1405;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E151B;
+  --surface: #16202A;
+  --fg: #E8EEF3;
+  --muted: #9AA9B7;
+  --line: #2A3743;
+  --accent: #46C2A8;
+  --accent-soft: #14352F;
+  --tag: #E0A93B;
+  --tag-ink: #1A1405;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.55;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
+.brand span { color: var(--accent); }
+.status {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase;
+  border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 4px 12px;
+}
+.hero { display: grid; grid-template-columns: 1fr; gap: 28px; align-items: center; }
+@media (min-width: 820px) { .hero { grid-template-columns: 1.1fr 0.9fr; gap: 40px; } }
+.hero > * { min-width: 0; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 6vw, 48px); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 16px; text-wrap: balance; }
+.lede { color: var(--muted); font-size: 19px; margin: 0; max-width: 60ch; }
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; }
+.c-grid { stroke: var(--line); stroke-width: 1; fill: none; }
+.c-line { stroke: var(--fg); stroke-width: 2.5; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.c-target { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+.c-dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.c-text { fill: var(--fg); font-family: var(--mono); font-size: 12px; }
+.c-muted { fill: var(--muted); font-family: var(--mono); font-size: 11px; }
+.c-accent { fill: var(--accent); font-family: var(--mono); font-size: 11px; }
+h2 { font-family: var(--display); font-weight: 700; font-size: clamp(22px, 4vw, 30px); letter-spacing: -0.015em; margin: 0 0 20px; text-wrap: balance; }
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 820px) { ol.steps { grid-template-columns: repeat(3, 1fr); gap: 28px; } }
+ol.steps li { min-width: 0; border-top: 2px solid var(--fg); padding-top: 14px; }
+.n { font-family: var(--mono); font-weight: 500; font-size: 13px; color: var(--accent); display: block; margin-bottom: 6px; }
+h3 { font-family: var(--display); font-weight: 600; font-size: 19px; margin: 0 0 6px; text-wrap: balance; }
+p { margin: 0; }
+.steps p, .adv p { color: var(--muted); }
+.adv-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 820px) { .adv-grid { grid-template-columns: repeat(3, 1fr); } }
+.adv { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 0; }
+.tag {
+  display: inline-block; font-family: var(--mono); font-weight: 500; font-size: 13px;
+  background: var(--tag); color: var(--tag-ink); padding: 2px 8px; border-radius: 4px; margin-bottom: 12px;
+}
+footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--muted); font-size: 15px; }
+.mail { color: var(--accent); font-family: var(--mono); font-size: 14px; overflow-wrap: anywhere; user-select: all; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Caiu<span>App</span></div>
+    <div class="status">Em desenvolvimento</div>
+  </header>
+
+  <section class="hero">
+    <div>
+      <h1>Avisa quando o preço chega onde você quer.</h1>
+      <p class="lede">O CaiuApp é um aplicativo brasileiro para Android e iOS que acompanha preços em marketplaces e lojas virtuais. O consumidor escolhe uma categoria, um produto genérico ou um produto específico, define o preço-alvo e recebe um alerta quando ele é atingido.</p>
+    </div>
+    <figure class="chart" style="margin:0">
+      <svg viewBox="0 0 360 180" role="img" aria-label="Exemplo de preço caindo de R$ 500 para R$ 389 e cruzando o preço-alvo de R$ 400">
+        <line class="c-grid" x1="40" y1="150" x2="340" y2="150"/>
+        <line class="c-target" x1="40" y1="117.5" x2="340" y2="117.5"/>
+        <polyline class="c-line" points="40,36.3 90,37.9 140,60.6 190,72.8 240,93.1 290,107.8 340,126.4"/>
+        <circle class="c-dot" cx="316" cy="117.5" r="6"/>
+        <text class="c-text" x="40" y="26">R$ 500</text>
+        <text class="c-text" x="296" y="146" text-anchor="start">R$ 389</text>
+        <text class="c-accent" x="40" y="132">preço-alvo R$ 400</text>
+        <text class="c-muted" x="316" y="104" text-anchor="middle">alerta</text>
+        <text class="c-muted" x="40" y="170">semana 1</text>
+        <text class="c-muted" x="340" y="170" text-anchor="end">semana 7</text>
+      </svg>
+      <figcaption>Exemplo ilustrativo, sem dados reais de lojas.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Como funciona</h2>
+    <ol class="steps">
+      <li>
+        <span class="n">1</span>
+        <h3>Escolha o que acompanhar</h3>
+        <p>Uma categoria, como smartphones, um produto genérico ou um produto específico de uma loja.</p>
+      </li>
+      <li>
+        <span class="n">2</span>
+        <h3>Defina o preço-alvo</h3>
+        <p>O consumidor diz quanto quer pagar. O app guarda o histórico de preços a partir do momento em que o produto é cadastrado.</p>
+      </li>
+      <li>
+        <span class="n">3</span>
+        <h3>Receba o alerta</h3>
+        <p>Quando o preço chega ao alvo, o app avisa e leva o consumidor à página da loja.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Três vantagens para anunciantes</h2>
+    <div class="adv-grid">
+      <article class="adv">
+        <span class="tag">R$ 400,00</span>
+        <h3>Visitantes com intenção de compra</h3>
+        <p>O alerta só dispara quando o preço chega ao valor que o próprio consumidor definiu. Quem clica já decidiu quanto quer pagar.</p>
+      </article>
+      <article class="adv">
+        <span class="tag">categoria</span>
+        <h3>Presença por categoria e por produto</h3>
+        <p>O consumidor acompanha categorias e produtos específicos, então a oferta da loja chega a quem procura exatamente aquilo.</p>
+      </article>
+      <article class="adv">
+        <span class="tag">link</span>
+        <h3>Divulgação transparente e dentro das regras</h3>
+        <p>Links de afiliado identificados, sem cupons inventados e sem uso de dados além do que cada programa permite.</p>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    O CaiuApp está em fase de desenvolvimento e validação. Contato: <a class="mail" href="mailto:caiuapp.ia@gmail.com">caiuapp.ia@gmail.com</a>
+  </footer>
+</div>
+
+</body>
+</html>
