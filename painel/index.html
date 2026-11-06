@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel do Caiu!</title>
+<!-- Painel de acompanhamento do Caiu! (só para administradores).
+     A página não guarda dados: depois do login por código no e-mail, pede os números ao banco
+     (função painel_metricas, que só responde a administradores com e-mail confirmado).
+     A chave abaixo é a chave PÚBLICA do app (a mesma que vai no site e no APK). -->
+<style>
+  :root {
+    --fundo: #EEF3FA; --superficie: #FFFFFF; --texto: #0F1F38; --titulo: #142E57; --suave: #5B6A80;
+    --linha: #DCE4EF; --grade: #E6ECF4; --destaque: #2F6FD0; --barra: #2F6FD0; --perigo: #C9353A; --foco: #2F6FD0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fundo: #000000; --superficie: #0B0C0F; --texto: #E6E8EB; --titulo: #FFFFFF; --suave: #9AA1AB;
+      --linha: #1B1E24; --grade: #1B1E24; --destaque: #7DAFF3; --barra: #5A8FDB; --perigo: #FF6B70; --foco: #7DAFF3;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fundo: #000000; --superficie: #0B0C0F; --texto: #E6E8EB; --titulo: #FFFFFF; --suave: #9AA1AB;
+    --linha: #1B1E24; --grade: #1B1E24; --destaque: #7DAFF3; --barra: #5A8FDB; --perigo: #FF6B70; --foco: #7DAFF3;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 20px 16px 48px; }
+  h1 { font-size: 30px; margin: 0; color: var(--titulo); letter-spacing: -0.5px; }
+  h1 span { color: var(--destaque); }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); margin: 28px 0 10px; font-weight: 600; }
+  .topo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between; margin-bottom: 8px; }
+  .sub { color: var(--suave); font-size: 14px; margin: 4px 0 0; }
+  .cartao { background: var(--superficie); border: 1px solid var(--linha); border-radius: 18px; padding: 16px; }
+  .login { max-width: 420px; margin: 48px auto; display: grid; gap: 12px; }
+  label { font-size: 14px; color: var(--suave); }
+  input { font: inherit; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--linha); background: var(--fundo); color: var(--texto); width: 100%; }
+  button { font: inherit; font-weight: 600; padding: 11px 16px; border-radius: 12px; border: 0; background: var(--destaque); color: #fff; cursor: pointer; }
+  button.secundario { background: transparent; color: var(--destaque); border: 1px solid var(--linha); }
+  button:disabled { opacity: .5; cursor: default; }
+  :focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+  .erro { color: var(--perigo); font-size: 14px; min-height: 20px; }
+  .periodo { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .periodo button { padding: 7px 12px; font-size: 14px; }
+  .periodo button[aria-pressed="false"] { background: transparent; color: var(--destaque); border: 1px solid var(--linha); }
+  .numeros { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .numero { background: var(--superficie); border: 1px solid var(--linha); border-radius: 16px; padding: 12px 14px; }
+  .numero strong { display: block; font-size: 26px; color: var(--titulo); font-variant-numeric: tabular-nums; }
+  .numero span { font-size: 13px; color: var(--suave); }
+  .graficos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .grafico h3 { font-size: 16px; margin: 0 0 2px; color: var(--titulo); }
+  .grafico p { margin: 0 0 8px; font-size: 13px; color: var(--suave); }
+  .grafico svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .eixo { fill: var(--suave); font-size: 18px; }
+  .grade { stroke: var(--grade); stroke-width: 1; }
+  .barra { fill: var(--barra); }
+  .alvo { fill: transparent; cursor: default; }
+  .alvo:focus-visible { outline: none; stroke: var(--foco); stroke-width: 2; }
+  details { margin-top: 8px; font-size: 13px; }
+  summary { cursor: pointer; color: var(--destaque); }
+  table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--linha); font-variant-numeric: tabular-nums; }
+  td.n, th.n { text-align: right; }
+  .lista { display: grid; gap: 6px; }
+  .item { display: grid; grid-template-columns: minmax(90px, 40%) 1fr auto; gap: 8px; align-items: center; font-size: 14px; }
+  .item .trilho { height: 12px; }
+  .item .trilho i { display: block; height: 12px; background: var(--barra); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .item b { font-variant-numeric: tabular-nums; color: var(--texto); font-weight: 600; }
+  .nota { font-size: 14px; color: var(--suave); }
+  #dica { position: fixed; pointer-events: none; background: var(--superficie); color: var(--texto); border: 1px solid var(--linha); border-radius: 10px; padding: 6px 10px; font-size: 13px; box-shadow: 0 6px 18px rgba(0,0,0,.15); display: none; z-index: 10; }
+  #dica strong { display: block; font-size: 15px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div class="topo">
+    <div>
+      <h1>Caiu<span>!</span> · Painel</h1>
+      <p class="sub" id="situacao">Acompanhamento do app — só para administradores.</p>
+    </div>
+    <div class="periodo" id="periodo" hidden>
+      <button type="button" data-dias="7" aria-pressed="false">7 dias</button>
+      <button type="button" data-dias="30" aria-pressed="true">30 dias</button>
+      <button type="button" data-dias="90" aria-pressed="false">90 dias</button>
+      <button type="button" class="secundario" id="sair">Sair</button>
+    </div>
+  </div>
+
+  <!-- Login: código de 6 dígitos no e-mail (o mesmo login do app) -->
+  <form class="cartao login" id="formEmail" hidden>
+    <label for="email">E-mail de administrador</label>
+    <input id="email" type="email" autocomplete="email" required placeholder="seu@email.com">
+    <button type="submit" id="enviar">Receber código por e-mail</button>
+    <div class="erro" id="erroEmail" role="alert"></div>
+  </form>
+  <form class="cartao login" id="formCodigo" hidden>
+    <label for="codigo">Digite o código de 6 dígitos que chegou no e-mail</label>
+    <input id="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required placeholder="000000">
+    <button type="submit" id="entrar">Entrar</button>
+    <button type="button" class="secundario" id="voltar">Usar outro e-mail</button>
+    <div class="erro" id="erroCodigo" role="alert"></div>
+  </form>
+
+  <div id="conteudo" hidden></div>
+  <div id="dica" role="status"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+<script>
+(function () {
+  'use strict';
+  var URL_SUPABASE = 'https://swzwmapeppyyoahtwlkc.supabase.co';
+  var CHAVE_PUBLICA = 'sb_publishable_KfG-ARx30CjfAAglux1LbA_EUmJdA3y';
+  // storageKey próprio: a sessão do painel não se mistura com a do app no mesmo site
+  var sb = supabase.createClient(URL_SUPABASE, CHAVE_PUBLICA, { auth: { storageKey: 'caiu-painel-sessao', persistSession: true } });
+  var dias = 30;
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = new Intl.NumberFormat('pt-BR');
+
+  function el(tag, attrs, filhos) {
+    var e = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      if (k === 'texto') e.textContent = attrs[k]; else e.setAttribute(k, attrs[k]);
+    });
+    (filhos || []).forEach(function (f) { if (f) e.appendChild(typeof f === 'string' ? document.createTextNode(f) : f); });
+    return e;
+  }
+  function svg(tag, attrs) {
+    var e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    return e;
+  }
+
+  // ---------- login ----------
+  var emailDigitado = '';
+  function mostrarLogin() { $('formEmail').hidden = false; $('formCodigo').hidden = true; $('conteudo').hidden = true; $('periodo').hidden = true; }
+  $('formEmail').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    emailDigitado = $('email').value.trim().toLowerCase();
+    $('enviar').disabled = true; $('erroEmail').textContent = '';
+    var r = await sb.auth.signInWithOtp({ email: emailDigitado, options: { shouldCreateUser: true } });
+    $('enviar').disabled = false;
+    if (r.error) { $('erroEmail').textContent = 'Não foi possível enviar o código: ' + r.error.message; return; }
+    $('formEmail').hidden = true; $('formCodigo').hidden = false; $('codigo').focus();
+  });
+  $('formCodigo').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    $('entrar').disabled = true; $('erroCodigo').textContent = '';
+    var r = await sb.auth.verifyOtp({ email: emailDigitado, token: $('codigo').value.trim(), type: 'email' });
+    $('entrar').disabled = false;
+    if (r.error) { $('erroCodigo').textContent = 'Código inválido ou vencido. Peça outro.'; return; }
+    carregar();
+  });
+  $('voltar').addEventListener('click', mostrarLogin);
+  $('sair').addEventListener('click', async function () { await sb.auth.signOut(); mostrarLogin(); $('situacao').textContent = 'Você saiu do painel.'; });
+  Array.prototype.forEach.call(document.querySelectorAll('#periodo [data-dias]'), function (b) {
+    b.addEventListener('click', function () {
+      dias = Number(b.getAttribute('data-dias'));
+      Array.prototype.forEach.call(document.querySelectorAll('#periodo [data-dias]'), function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      carregar();
+    });
+  });
+
+  // ---------- dados ----------
+  async function carregar() {
+    $('situacao').textContent = 'Carregando…';
+    var r = await sb.rpc('painel_metricas', { p_dias: dias });
+    if (r.error) {
+      var semAcesso = r.error.code === '42501';
+      var semFuncao = r.error.code === 'PGRST202';
+      $('situacao').textContent = semAcesso ? 'Sua conta não tem acesso ao painel. Peça para incluir o seu e-mail na lista de administradores.'
+        : semFuncao ? 'O painel ainda não foi ativado no banco (migração 0029).' : 'Não foi possível carregar: ' + r.error.message;
+      $('formEmail').hidden = true; $('formCodigo').hidden = true; $('conteudo').hidden = true; $('periodo').hidden = false;
+      return;
+    }
+    desenhar(r.data);
+  }
+
+  // dias seguidos (sem buracos) para os gráficos de barras por dia
+  function porDia(lista, nDias, campo) {
+    var mapa = {}; (lista || []).forEach(function (x) { mapa[x.dia] = Number(x[campo || 'qtd']) || 0; });
+    var saida = [], hoje = new Date();
+    for (var i = nDias - 1; i >= 0; i--) {
+      var d = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - i);
+      var chave = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      saida.push({ rotulo: String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'), valor: mapa[chave] || 0 });
+    }
+    return saida;
+  }
+
+  var dica = $('dica');
+  function mostrarDica(alvo, rotulo, valor, unidade) {
+    dica.textContent = '';
+    dica.appendChild(el('strong', { texto: fmt.format(valor) + (unidade ? ' ' + unidade : '') }));
+    dica.appendChild(document.createTextNode(rotulo));
+    var c = alvo.getBoundingClientRect();
+    dica.style.display = 'block';
+    var x = Math.min(window.innerWidth - dica.offsetWidth - 8, Math.max(8, c.left + c.width / 2 - dica.offsetWidth / 2));
+    dica.style.left = x + 'px';
+    dica.style.top = Math.max(8, c.top - dica.offsetHeight - 8) + 'px';
+  }
+  function esconderDica() { dica.style.display = 'none'; }
+
+  // colunas por dia (uma série só: o título diz o que é; sem legenda)
+  function colunas(titulo, descricao, dados, unidade) {
+    var L = 640, A = 220, mE = 52, mB = 30, mT = 12;
+    var max = Math.max(1, Math.max.apply(null, dados.map(function (d) { return d.valor; })));
+    var passo = Math.pow(10, Math.floor(Math.log10(max)));
+    var topo = Math.ceil(max / passo) * passo;
+    var largura = (L - mE) / dados.length;
+    var b = Math.min(24, Math.max(2, largura - 2));
+    var g = svg('svg', { viewBox: '0 0 ' + L + ' ' + A, role: 'img', 'aria-label': titulo });
+    [0, 0.5, 1].forEach(function (f) {
+      var y = mT + (A - mT - mB) * (1 - f);
+      g.appendChild(svg('line', { x1: mE, x2: L, y1: y, y2: y, class: 'grade' }));
+      var t = svg('text', { x: mE - 6, y: y + 4, 'text-anchor': 'end', class: 'eixo' }); t.textContent = fmt.format(Math.round(topo * f)); g.appendChild(t);
+    });
+    dados.forEach(function (d, i) {
+      var h = (A - mT - mB) * (d.valor / topo);
+      var x = mE + i * largura + (largura - b) / 2;
+      var yBase = A - mB;
+      if (h > 0) {
+        var r = Math.min(4, h, b / 2);
+        g.appendChild(svg('path', { class: 'barra', d: 'M' + x + ',' + yBase + 'V' + (yBase - h + r) + 'Q' + x + ',' + (yBase - h) + ' ' + (x + r) + ',' + (yBase - h) +
+          'H' + (x + b - r) + 'Q' + (x + b) + ',' + (yBase - h) + ' ' + (x + b) + ',' + (yBase - h + r) + 'V' + yBase + 'Z' }));
+      }
+      var alvo = svg('rect', { class: 'alvo', x: mE + i * largura, y: mT, width: largura, height: A - mT - mB, tabindex: '0', 'aria-label': d.rotulo + ': ' + fmt.format(d.valor) });
+      ['pointerenter', 'focus'].forEach(function (ev) { alvo.addEventListener(ev, function () { mostrarDica(alvo, d.rotulo, d.valor, unidade); }); });
+      ['pointerleave', 'blur'].forEach(function (ev) { alvo.addEventListener(ev, esconderDica); });
+      g.appendChild(alvo);
+      if (i === 0 || i === dados.length - 1 || (dados.length > 14 && i % 7 === 0)) {
+        var t = svg('text', { x: mE + i * largura + largura / 2, y: A - 4, 'text-anchor': 'middle', class: 'eixo' }); t.textContent = d.rotulo; g.appendChild(t);
+      }
+    });
+    return el('section', { class: 'cartao grafico' }, [el('h3', { texto: titulo }), el('p', { texto: descricao }), g, tabela(dados, 'Dia')]);
+  }
+
+  // barras horizontais (ranking): rótulo, trilho e valor
+  function ranking(titulo, descricao, itens) {
+    var max = Math.max(1, Math.max.apply(null, itens.map(function (i) { return i.valor; })));
+    var lista = el('div', { class: 'lista' });
+    if (!itens.length) lista.appendChild(el('p', { class: 'nota', texto: 'Nada no período.' }));
+    itens.forEach(function (i) {
+      var barra = el('i'); barra.style.width = Math.max(1, (i.valor / max) * 100) + '%';
+      lista.appendChild(el('div', { class: 'item' }, [el('span', { texto: i.rotulo }), el('div', { class: 'trilho' }, [barra]), el('b', { texto: fmt.format(i.valor) })]));
+    });
+    return el('section', { class: 'cartao grafico' }, [el('h3', { texto: titulo }), el('p', { texto: descricao }), lista]);
+  }
+
+  function tabela(dados, coluna) {
+    var corpo = el('tbody');
+    dados.forEach(function (d) { corpo.appendChild(el('tr', null, [el('td', { texto: d.rotulo }), el('td', { class: 'n', texto: fmt.format(d.valor) })])); });
+    return el('details', null, [el('summary', { texto: 'Ver tabela' }), el('table', null, [el('thead', null, [el('tr', null, [el('th', { texto: coluna }), el('th', { class: 'n', texto: 'Quantidade' })])]), corpo])]);
+  }
+
+  function numero(valor, rotulo) { return el('div', { class: 'numero' }, [el('strong', { texto: valor == null ? '—' : (typeof valor === 'number' ? fmt.format(valor) : valor) }), el('span', { texto: rotulo })]); }
+
+  var NOMES_EVENTO = { abriu_app: 'Abriu o app', busca: 'Buscas', clique_loja: 'Cliques em lojas', acompanhar: 'Acompanhou produto', acompanhar_tipo: 'Acompanhou tipo',
+    compartilhou: 'Compartilhou', busca_por_imagem: 'Busca por foto', comparou_lojas: 'Comparou lojas' };
+  var NOMES_MOTIVO = { preco_alvo: 'Chegou no preço-alvo', abaixo_media: 'Abaixo da média', generico_queda: 'Queda no tipo acompanhado' };
+
+  function desenhar(m) {
+    var c = $('conteudo'); c.textContent = '';
+    var u = m.usuarios, b = m.base, ml = m.mercado_livre, ac = m.acompanhamentos, al = m.alertas, cp = m.cupons;
+    var atualizado = new Date(m.gerado_em).toLocaleString('pt-BR');
+    var ultima = b.ultima_coleta ? new Date(b.ultima_coleta).toLocaleString('pt-BR') : 'nenhuma';
+    $('situacao').textContent = 'Últimos ' + m.dias + ' dias · atualizado em ' + atualizado + ' · última coleta de preços: ' + ultima;
+
+    c.appendChild(el('h2', { texto: 'Pessoas' }));
+    c.appendChild(el('div', { class: 'numeros' }, [numero(u.total, 'contas no total'), numero(u.visitantes, 'visitantes'), numero(u.com_conta, 'com login'),
+      numero(u.aceitaram_termo, 'aceitaram o termo'), numero(u.novos_no_periodo, 'novas no período'), numero(u.ativos_7d, 'ativas em 7 dias'), numero(u.ativos_30d, 'ativas em 30 dias')]));
+    c.appendChild(el('div', { class: 'graficos' }, [
+      colunas('Contas novas por dia', 'Visitantes criados no aceite do termo e contas com login.', porDia(u.novos_por_dia, m.dias), 'contas'),
+      colunas('Pessoas ativas por dia', 'Pessoas diferentes que usaram o app em cada dia.', porDia(u.ativos_por_dia, m.dias), 'pessoas'),
+    ]));
+
+    c.appendChild(el('h2', { texto: 'Uso' }));
+    c.appendChild(el('div', { class: 'graficos' }, [
+      colunas('Buscas por dia', 'Buscas de menor preço feitas no app.', porDia(m.uso.buscas_por_dia, m.dias), 'buscas'),
+      ranking('O que as pessoas fizeram', 'Ações registradas no período.', (m.uso.eventos_por_tipo || []).map(function (e) { return { rotulo: NOMES_EVENTO[e.tipo] || e.tipo, valor: e.qtd }; })),
+      ranking('Cliques por loja', 'Idas às lojas a partir do app (base das futuras comissões).', (m.uso.cliques_por_loja || []).map(function (e) { return { rotulo: e.loja, valor: e.qtd }; })),
+      colunas('Buscas por foto por dia', 'Cada uma é uma chamada paga ao Gemini (preço por chamada: a confirmar).', porDia(m.uso.fotos_por_dia, m.dias), 'fotos'),
+    ]));
+
+    c.appendChild(el('h2', { texto: 'Acompanhamentos e avisos' }));
+    c.appendChild(el('div', { class: 'numeros' }, [numero(ac.produtos_ativos, 'produtos acompanhados'), numero(ac.pessoas, 'pessoas acompanhando'), numero(ac.com_preco_alvo, 'com preço-alvo'),
+      numero(ac.tipos_ativos, 'tipos acompanhados'), numero(al.no_periodo, 'avisos no período'), numero(al.no_periodo ? Math.round(100 * al.lidos / al.no_periodo) + '%' : '—', 'avisos lidos')]));
+    c.appendChild(el('div', { class: 'graficos' }, [
+      ranking('Avisos por motivo', 'Gerados pelo coletor no período.', (al.por_motivo || []).map(function (e) { return { rotulo: NOMES_MOTIVO[e.motivo] || e.motivo, valor: e.qtd }; })),
+      ranking('Cupons ativos por origem', cp.pendentes + ' aguardando moderação · ' + cp.sinalizados + ' sinalizados para revisão · ' + fmt.format(cp.votos_no_periodo) + ' votos no período.',
+        (cp.ativos_por_fonte || []).map(function (e) { return { rotulo: e.fonte, valor: e.qtd }; })),
+    ]));
+
+    c.appendChild(el('h2', { texto: 'Base de preços e Mercado Livre' }));
+    c.appendChild(el('div', { class: 'numeros' }, [numero(b.produtos, 'produtos na base'), numero(b.monitorados, 'monitorados pelo coletor'), numero(b.lojas_parceiras, 'lojas parceiras'),
+      numero(b.ofertas_parceiras, 'ofertas de parceiras ativas'), numero(ml.chamadas_no_periodo, 'chamadas ao ML no período'),
+      numero(ml.chamadas_no_periodo ? (100 * ml.erros_no_periodo / ml.chamadas_no_periodo).toFixed(1).replace('.', ',') + '%' : '—', 'chamadas com erro')]));
+    c.appendChild(el('div', { class: 'graficos' }, [
+      colunas('Registros de preço por dia', 'Últimos 14 dias. Dias sem barra = coletor parado (computador desligado).', porDia(b.registros_por_dia, 14), 'registros'),
+      colunas('Chamadas ao Mercado Livre por dia', 'Coletor e buscas do app.', porDia(ml.chamadas_por_dia, m.dias), 'chamadas'),
+    ]));
+
+    c.appendChild(el('h2', { texto: 'Receita' }));
+    c.appendChild(el('div', { class: 'cartao' }, [el('p', { class: 'nota', texto: m.receita.situacao })]));
+
+    $('formEmail').hidden = true; $('formCodigo').hidden = true; c.hidden = false; $('periodo').hidden = false;
+  }
+
+  sb.auth.getSession().then(function (r) { if (r.data.session) carregar(); else mostrarLogin(); });
+})();
+</script>
+</body>
+</html>
