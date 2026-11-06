@@ -72,6 +72,7 @@
   #dica strong { display: block; font-size: 15px; }
   [hidden] { display: none !important; }
 </style>
+<link rel="stylesheet" href="bi.css">
 </head>
 <body>
 <main>
@@ -108,6 +109,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+<!-- módulos de Business Intelligence (abas): painel/bi.js, carregado antes; liga-se depois do login -->
+<script src="bi.js"></script>
 <script>
 (function () {
   'use strict';
@@ -159,7 +162,7 @@
     carregar();
   });
   $('voltar').addEventListener('click', mostrarLogin);
-  $('sair').addEventListener('click', async function () { await sb.auth.signOut(); mostrarLogin(); $('situacao').textContent = 'Você saiu do painel.'; });
+  $('sair').addEventListener('click', async function () { await sb.auth.signOut(); location.reload(); });
   Array.prototype.forEach.call(document.querySelectorAll('#periodo [data-dias]'), function (b) {
     b.addEventListener('click', function () {
       dias = Number(b.getAttribute('data-dias'));
@@ -182,6 +185,7 @@
     }
     desenhar(r.data);
     carregarInteresses();
+    if (window.caiuBI) window.caiuBI.iniciar(sb);   // abas novas (a tela original vira a aba "Acompanhamento")
   }
 
   // ---------- cadastros e interesses declarados (migração 0030) ----------
@@ -338,7 +342,7 @@
     c.appendChild(el('h2', { texto: 'Receita' }));
     c.appendChild(el('div', { class: 'cartao' }, [el('p', { class: 'nota', texto: m.receita.situacao })]));
 
-    $('formEmail').hidden = true; $('formCodigo').hidden = true; c.hidden = false; $('periodo').hidden = false;
+    $('formEmail').hidden = true; $('formCodigo').hidden = true; c.hidden = document.body.classList.contains('aba-bi'); $('periodo').hidden = false;
   }
 
   sb.auth.getSession().then(function (r) { if (r.data.session) carregar(); else mostrarLogin(); });

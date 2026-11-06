@@ -1,0 +1,95 @@
+/* Painel do Caiu! — módulos de Business Intelligence (abas). Usa os tokens de cor do index.html. */
+:root {
+  --serie-1: #2F6FD0; --serie-2: #eb6834; --serie-3: #1baf7a; --serie-4: #eda100;
+  --serie-5: #e87ba4; --serie-6: #008300; --serie-7: #6250d6; --serie-8: #e34948;
+  --anterior: #9AA6B8; --seq-baixo: #cde2fb; --seq-alto: #104281; --texto-2: #3D4B60;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --serie-1: #5A8FDB; --serie-2: #d95926; --serie-3: #199e70; --serie-4: #c98500;
+    --serie-5: #d55181; --serie-6: #008300; --serie-7: #9085e9; --serie-8: #e66767;
+    --anterior: #4C5361; --seq-baixo: #142238; --seq-alto: #8FBDF5; --texto-2: #C3C8D0;
+  }
+}
+:root[data-theme="dark"] {
+  --serie-1: #5A8FDB; --serie-2: #d95926; --serie-3: #199e70; --serie-4: #c98500;
+  --serie-5: #d55181; --serie-6: #008300; --serie-7: #9085e9; --serie-8: #e66767;
+  --anterior: #4C5361; --seq-baixo: #142238; --seq-alto: #8FBDF5; --texto-2: #C3C8D0;
+}
+
+main { max-width: 1280px; }
+
+/* abas */
+.abas { display: flex; gap: 4px; overflow-x: auto; margin: 14px -16px 0; padding: 0 16px 2px; border-bottom: 1px solid var(--linha); scrollbar-width: thin; }
+.abas button { background: transparent; color: var(--suave); border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 10px 12px; white-space: nowrap; font-weight: 600; font-size: 15px; }
+.abas button[aria-selected="true"] { color: var(--titulo); border-bottom-color: var(--destaque); }
+.abas button:hover { color: var(--titulo); }
+body.aba-bi #periodo [data-dias] { display: none; }
+
+/* barra de filtros: uma linha só, acima de todos os gráficos */
+.filtros { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; align-items: end; padding: 12px 0; background: var(--fundo); border-bottom: 1px solid var(--linha); margin-bottom: 14px; }
+.filtros label { display: grid; gap: 3px; font-size: 12px; color: var(--suave); }
+.filtros select, .filtros input { font: inherit; font-size: 14px; padding: 7px 9px; border-radius: 10px; border: 1px solid var(--linha); background: var(--superficie); color: var(--texto); width: auto; min-width: 0; max-width: 220px; }
+.filtros select:disabled { opacity: .45; }
+.filtros .caixa { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--texto); padding-bottom: 7px; }
+.filtros .caixa input { width: 16px; height: 16px; padding: 0; }
+.filtros button { padding: 8px 12px; font-size: 14px; }
+.nota-filtro { flex-basis: 100%; font-size: 12px; color: var(--suave); margin: 0; }
+
+/* cartões de indicador */
+.kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi { background: var(--superficie); border: 1px solid var(--linha); border-radius: 16px; padding: 12px 14px; display: grid; gap: 2px; align-content: start; }
+.kpi .rot { font-size: 13px; color: var(--suave); display: flex; gap: 6px; align-items: center; justify-content: space-between; }
+.kpi .val { font-size: 26px; font-weight: 700; color: var(--titulo); letter-spacing: -0.3px; line-height: 1.2; }
+.kpi .var { font-size: 13px; color: var(--texto-2); }
+.kpi .mot { font-size: 12px; color: var(--suave); line-height: 1.35; }
+.kpi .selo { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--suave); border: 1px solid var(--linha); border-radius: 6px; padding: 1px 5px; }
+.info { cursor: help; color: var(--suave); border: 1px solid var(--linha); border-radius: 50%; width: 16px; height: 16px; font-size: 11px; display: inline-grid; place-items: center; flex: none; }
+
+/* cartões de gráfico */
+.grade-bi { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.grade-bi .largo { grid-column: 1 / -1; }
+.card-bi { background: var(--superficie); border: 1px solid var(--linha); border-radius: 18px; padding: 14px 16px; min-width: 0; }
+.card-bi h3 { font-size: 16px; margin: 0; color: var(--titulo); }
+.card-bi .desc { margin: 2px 0 8px; font-size: 13px; color: var(--suave); }
+.card-bi .grafico-bi { width: 100%; height: 280px; }
+.card-bi .grafico-bi.alto { height: 360px; }
+.card-bi .acoes { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+.card-bi .acoes button { background: transparent; color: var(--destaque); border: 1px solid var(--linha); padding: 4px 10px; font-size: 13px; border-radius: 8px; font-weight: 600; }
+.card-bi details { font-size: 13px; flex-basis: 100%; }
+.card-bi .vazio { display: grid; place-items: center; min-height: 120px; color: var(--suave); font-size: 14px; text-align: center; padding: 12px; }
+.secao-bi { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); margin: 22px 0 10px; font-weight: 600; }
+.aviso-bi { background: var(--superficie); border: 1px solid var(--linha); border-left: 3px solid var(--destaque); border-radius: 12px; padding: 10px 12px; font-size: 13px; color: var(--texto-2); margin-bottom: 12px; }
+
+/* tabela analítica */
+.tabela-bi { overflow-x: auto; }
+.tabela-bi table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.tabela-bi th, .tabela-bi td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--linha); white-space: nowrap; }
+.tabela-bi th { color: var(--suave); font-weight: 600; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--superficie); }
+.tabela-bi th[aria-sort="ascending"]::after { content: " ▲"; }
+.tabela-bi th[aria-sort="descending"]::after { content: " ▼"; }
+.tabela-bi td.n, .tabela-bi th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.tabela-bi td.nome { white-space: normal; min-width: 180px; }
+.tabela-bi a { color: var(--destaque); }
+.tabela-bi .busca-tab { font: inherit; font-size: 13px; padding: 6px 9px; border-radius: 8px; border: 1px solid var(--linha); background: var(--fundo); color: var(--texto); width: 100%; max-width: 280px; margin-bottom: 6px; }
+.link-acao { background: none; border: 0; padding: 0; color: var(--destaque); font: inherit; font-weight: 600; cursor: pointer; }
+
+/* lista com barras (para contagens com anonimato "<50") */
+.lista-bi { display: grid; gap: 6px; }
+.lista-bi .it { display: grid; grid-template-columns: minmax(90px, 38%) 1fr auto; gap: 8px; align-items: center; font-size: 14px; }
+.lista-bi .trilho { height: 10px; }
+.lista-bi .trilho i { display: block; height: 10px; background: var(--serie-1); border-radius: 0 4px 4px 0; min-width: 2px; }
+.lista-bi b { font-weight: 600; color: var(--texto); }
+
+/* segmentos */
+.form-seg { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; align-items: end; }
+.form-seg label { display: grid; gap: 3px; font-size: 12px; color: var(--suave); }
+.form-seg select, .form-seg input { font: inherit; font-size: 14px; padding: 7px 9px; border-radius: 10px; border: 1px solid var(--linha); background: var(--fundo); color: var(--texto); }
+.form-seg select[multiple] { min-height: 92px; }
+
+@media (max-width: 600px) {
+  .grade-bi { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi .val { font-size: 22px; }
+  .filtros select, .filtros input { max-width: 46vw; }
+}
