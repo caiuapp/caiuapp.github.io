@@ -72,6 +72,7 @@
   #dica strong { display: block; font-size: 15px; }
   [hidden] { display: none !important; }
 </style>
+<link rel="stylesheet" href="bi.css">
 </head>
 <body>
 <main>
@@ -108,6 +109,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+<!-- módulos de Business Intelligence (abas): painel/bi.js, carregado antes; liga-se depois do login -->
+<script src="bi.js"></script>
 <script>
 (function () {
   'use strict';
@@ -140,9 +143,14 @@
     ev.preventDefault();
     emailDigitado = $('email').value.trim().toLowerCase();
     $('enviar').disabled = true; $('erroEmail').textContent = '';
-    var r = await sb.auth.signInWithOtp({ email: emailDigitado, options: { shouldCreateUser: true } });
+    // shouldCreateUser: false — o painel não cria contas (o administrador já tem conta; antes, qualquer e-mail virava conta nova)
+    var r = await sb.auth.signInWithOtp({ email: emailDigitado, options: { shouldCreateUser: false } });
     $('enviar').disabled = false;
-    if (r.error) { $('erroEmail').textContent = 'Não foi possível enviar o código: ' + r.error.message; return; }
+    if (r.error) {
+      var semConta = /signups? not allowed|otp_disabled|user not found/i.test(r.error.message + ' ' + (r.error.code || ''));
+      $('erroEmail').textContent = semConta ? 'Este e-mail não tem conta no Caiu!. Use o e-mail de administrador.' : 'Não foi possível enviar o código: ' + r.error.message;
+      return;
+    }
     $('formEmail').hidden = true; $('formCodigo').hidden = false; $('codigo').focus();
   });
   $('formCodigo').addEventListener('submit', async function (ev) {
@@ -154,7 +162,7 @@
     carregar();
   });
   $('voltar').addEventListener('click', mostrarLogin);
-  $('sair').addEventListener('click', async function () { await sb.auth.signOut(); mostrarLogin(); $('situacao').textContent = 'Você saiu do painel.'; });
+  $('sair').addEventListener('click', async function () { await sb.auth.signOut(); location.reload(); });
   Array.prototype.forEach.call(document.querySelectorAll('#periodo [data-dias]'), function (b) {
     b.addEventListener('click', function () {
       dias = Number(b.getAttribute('data-dias'));
@@ -176,6 +184,33 @@
       return;
     }
     desenhar(r.data);
+    carregarInteresses();
+    if (window.caiuBI) window.caiuBI.iniciar(sb);   // abas novas (a tela original vira a aba "Acompanhamento")
+  }
+
+  // ---------- cadastros e interesses declarados (migração 0030) ----------
+  // Só números agregados; grupos com menos pessoas que o limite de anonimato aparecem como "menos de N".
+  async function carregarInteresses() {
+    var alvo = $('secaoInteresses'); if (!alvo) return;
+    alvo.textContent = '';
+    alvo.appendChild(el('h2', { texto: 'Cadastros e interesses declarados' }));
+    var r = await sb.rpc('painel_interesses_declarados');
+    if (r.error) {
+      alvo.appendChild(el('div', { class: 'cartao' }, [el('p', { class: 'nota', texto: r.error.code === 'PGRST202'
+        ? 'Ainda não ativado no banco (migração 0030). O resto do painel funciona normalmente.'
+        : 'Não foi possível carregar esta parte: ' + r.error.message })]));
+      return;
+    }
+    var d = r.data, lim = d.limite_anonimato;
+    var item = function (rotulo, x) { return { rotulo: rotulo, valor: x.qtd || 0, texto: x.abaixo_do_limite ? 'menos de ' + lim : null }; };
+    alvo.appendChild(el('div', { class: 'numeros' }, [numero(d.cadastros_completos, 'cadastros completos'), numero(d.pessoas_com_interesses, 'pessoas com interesses marcados')]));
+    alvo.appendChild(el('div', { class: 'graficos' }, [
+      ranking('Interesses por categoria', 'Categorias marcadas nas pílulas do cadastro e de Ajustes. Grupos com menos de ' + lim + ' pessoas não mostram o número.',
+        (d.por_categoria || []).map(function (x) { return item(x.categoria, x); })),
+      ranking('Faixa etária', 'Só cadastros completos. ' + d.regra_menores, (d.faixas_etarias || []).map(function (x) { return item(x.faixa, x); })),
+      ranking('Estado (pelo DDD do celular)', 'Estimativa: o DDD indica onde a linha foi registrada, não onde a pessoa mora.',
+        (d.por_uf || []).map(function (x) { return item(x.uf, x); })),
+    ]));
   }
 
   // dias seguidos (sem buracos) para os gráficos de barras por dia
@@ -244,7 +279,7 @@
     if (!itens.length) lista.appendChild(el('p', { class: 'nota', texto: 'Nada no período.' }));
     itens.forEach(function (i) {
       var barra = el('i'); barra.style.width = Math.max(1, (i.valor / max) * 100) + '%';
-      lista.appendChild(el('div', { class: 'item' }, [el('span', { texto: i.rotulo }), el('div', { class: 'trilho' }, [barra]), el('b', { texto: fmt.format(i.valor) })]));
+      lista.appendChild(el('div', { class: 'item' }, [el('span', { texto: i.rotulo }), el('div', { class: 'trilho' }, [barra]), el('b', { texto: i.texto || fmt.format(i.valor) })]));
     });
     return el('section', { class: 'cartao grafico' }, [el('h3', { texto: titulo }), el('p', { texto: descricao }), lista]);
   }
@@ -276,6 +311,8 @@
       colunas('Pessoas ativas por dia', 'Pessoas diferentes que usaram o app em cada dia.', porDia(u.ativos_por_dia, m.dias), 'pessoas'),
     ]));
 
+    c.appendChild(el('div', { id: 'secaoInteresses' }));
+
     c.appendChild(el('h2', { texto: 'Uso' }));
     c.appendChild(el('div', { class: 'graficos' }, [
       colunas('Buscas por dia', 'Buscas de menor preço feitas no app.', porDia(m.uso.buscas_por_dia, m.dias), 'buscas'),
@@ -305,7 +342,7 @@
     c.appendChild(el('h2', { texto: 'Receita' }));
     c.appendChild(el('div', { class: 'cartao' }, [el('p', { class: 'nota', texto: m.receita.situacao })]));
 
-    $('formEmail').hidden = true; $('formCodigo').hidden = true; c.hidden = false; $('periodo').hidden = false;
+    $('formEmail').hidden = true; $('formCodigo').hidden = true; c.hidden = document.body.classList.contains('aba-bi'); $('periodo').hidden = false;
   }
 
   sb.auth.getSession().then(function (r) { if (r.data.session) carregar(); else mostrarLogin(); });
