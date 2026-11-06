@@ -40,6 +40,7 @@
   button.secundario { background: transparent; color: var(--destaque); border: 1px solid var(--linha); }
   button:disabled { opacity: .5; cursor: default; }
   :focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+  .ou { text-align: center; color: var(--suave); font-size: 13px; }
   .erro { color: var(--perigo); font-size: 14px; min-height: 20px; }
   .periodo { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .periodo button { padding: 7px 12px; font-size: 14px; }
@@ -94,6 +95,8 @@
     <label for="email">E-mail de administrador</label>
     <input id="email" type="email" autocomplete="email" required placeholder="seu@email.com">
     <button type="submit" id="enviar">Receber código por e-mail</button>
+    <div class="ou">ou</div>
+    <button type="button" class="secundario" id="google">Entrar com Google</button>
     <div class="erro" id="erroEmail" role="alert"></div>
   </form>
   <form class="cartao login" id="formCodigo" hidden>
@@ -139,6 +142,12 @@
   // ---------- login ----------
   var emailDigitado = '';
   function mostrarLogin() { $('formEmail').hidden = false; $('formCodigo').hidden = true; $('conteudo').hidden = true; $('periodo').hidden = true; }
+  // login com Google: volta para esta mesma página já com a sessão (a conta precisa estar na lista de administradores)
+  $('google').addEventListener('click', async function () {
+    $('erroEmail').textContent = '';
+    var r = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
+    if (r.error) $('erroEmail').textContent = 'Não foi possível entrar com Google: ' + r.error.message;
+  });
   $('formEmail').addEventListener('submit', async function (ev) {
     ev.preventDefault();
     emailDigitado = $('email').value.trim().toLowerCase();
