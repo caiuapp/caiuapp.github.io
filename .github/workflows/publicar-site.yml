@@ -1,0 +1,47 @@
+# Publica o site no GitHub Pages a cada envio ao ramo main (ou à mão, na aba Actions).
+# Antes de publicar, o 404.html da raiz vira cópia do app/index.html (.github/preparar-site.sh),
+# para que recarregar em /app/termos ou abrir /app/cupom/123 direto carregue o app.
+#
+# Requer: Settings → Pages → Build and deployment → Source = "GitHub Actions".
+# Ações e permissões conforme https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
+name: Publicar site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# uma publicação por vez; a que já começou termina antes da próxima
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    environment:
+      name: github-pages
+      url: ${{ steps.publicacao.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar os arquivos do site
+        uses: actions/checkout@v6
+
+      - name: Atualizar o 404.html e conferir os arquivos do app
+        run: bash .github/preparar-site.sh
+
+      - name: Configurar o GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Empacotar o site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: '.'
+
+      - name: Publicar
+        id: publicacao
+        uses: actions/deploy-pages@v4
