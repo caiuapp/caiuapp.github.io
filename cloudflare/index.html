@@ -120,6 +120,25 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);f
 .tip div{font-size:13px;color:var(--sec);padding:3px 0}
 .tip a{color:var(--ink)}
 
+.dist{font-size:12px;color:var(--muted);margin-left:6px}
+.card.today .dist{color:#d9d3c7}
+.follow{background:none;border:1px solid var(--line);border-radius:999px;width:36px;height:36px;cursor:pointer;font-size:16px;line-height:1;color:var(--muted);flex:none}
+.follow[aria-pressed=true]{background:var(--fest);border-color:var(--fest);color:#fff}
+.card.today .follow{border-color:#4a453e;color:#d9d3c7}
+.card-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px}
+.card-actions .link,.card-actions .na{margin-top:0}
+.badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:var(--aniv);color:#fff;font-size:11px;line-height:18px;text-align:center}
+.geo{font-size:13px;color:var(--muted)}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;cursor:pointer;font-size:13px;min-height:32px}
+.feed{padding:12px 0 64px}
+.feed-item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.feed-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.feed-head h3{font:700 17px var(--display);margin:0}
+.news{list-style:none;padding:0;margin:10px 0 0}
+.news li{padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.news li.new::before{content:"novo";font-size:10px;font-weight:700;background:var(--aniv);color:#fff;border-radius:4px;padding:1px 5px;margin-right:6px}
+.news a{color:var(--ink)}
+.news small{display:block;color:var(--muted);font-size:12px}
 @keyframes fade{to{opacity:1}}
 @keyframes rise{to{opacity:1;transform:none}}
 
@@ -161,6 +180,7 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);f
       <div class="seg" role="tablist" id="tabs">
         <button role="tab" aria-selected="true" data-tab="lista">Lista</button>
         <button role="tab" aria-selected="false" data-tab="cal">Calendário</button>
+        <button role="tab" aria-selected="false" data-tab="seg">Acompanhando<span class="badge" id="newCount" hidden></span></button>
       </div>
       <select id="fTipo" aria-label="Tipo">
         <option value="">Todos os tipos</option><option value="aniv">Aniversários</option><option value="expo">Expos agro</option><option value="fest">Festivais</option>
@@ -175,10 +195,22 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);f
       <div class="row" id="prox"></div>
       <button class="chip shows" id="shows" aria-pressed="false">Só com shows nacionais</button>
     </div>
+    <div class="row" style="margin-top:10px">
+      <select id="fRaio" aria-label="Distância máxima">
+        <option value="0">Qualquer distância</option><option value="100">Até 100 km</option><option value="250">Até 250 km</option>
+        <option value="500">Até 500 km</option><option value="1000">Até 1.000 km</option><option value="2000">Até 2.000 km</option>
+      </select>
+      <select id="fOrdem" aria-label="Ordenar">
+        <option value="data">Ordenar por data</option><option value="dist">Ordenar por distância</option>
+      </select>
+      <span class="geo">a partir de <b id="origem">Florianópolis/SC</b> ·
+        <button class="linkbtn" id="useGeo" type="button">usar minha localização</button></span>
+    </div>
   </div>
 
   <div class="meta" id="meta"></div>
   <section id="vLista"><div class="grid" id="grid"></div></section>
+  <section id="vSeg" class="feed" hidden><div id="feed"></div></section>
   <section id="vCal" class="cal" hidden>
     <div class="cal-head">
       <button class="nav" id="prev" aria-label="Mês anterior">←</button>
@@ -203,6 +235,7 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);f
 <div class="tip" id="tip" role="dialog" aria-live="polite"></div>
 
 <script src="dados.js"></script>
+<script src="coords.js"></script>
 <script>
 (function(){
   "use strict";
@@ -212,7 +245,11 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);f
   var TIPO = {aniv:"Aniversário",expo:"Expo agro",fest:"Festival"};
   var COR = {aniv:"var(--aniv)",expo:"var(--expo)",fest:"var(--fest)"};
   var today = new Date(); today.setHours(0,0,0,0);
-  var st = {tipo:"",reg:"",uf:"",q:"",prox:0,shows:false,tab:"lista",y:today.getFullYear(),m:today.getMonth()};
+  var st = {tipo:"",reg:"",uf:"",q:"",prox:0,shows:false,tab:"lista",y:today.getFullYear(),m:today.getMonth(),raio:0,ordem:"data"};
+  var origin = {lat:-27.5954,lon:-48.548,label:"Florianópolis/SC"};
+  function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)||"null"); localStorage.setItem(k,JSON.stringify(v)); }catch(e){ return null; } }
+  function km(a,b){ var R=6371,r=Math.PI/180,dl=(b.lat-a.lat)*r,dn=(b.lon-a.lon)*r;
+    var h=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)*Math.sin(dn/2); return 2*R*Math.asin(Math.sqrt(h)); }
   var $ = function(id){return document.getElementById(id)};
 
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -224,8 +261,12 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);f
     var t=r[4], ev=r[5]||(t==="aniv"?"Aniversário de "+r[0]:"");
     var dt=nextDate(r[2],r[3]);
     return {nome:r[0],uf:r[1],reg:REGIOES[r[1]],nUF:NOMES_UF[r[1]],dia:r[2],mes:r[3],tipo:t,ev:ev,shows:!!r[6],
-      link:isSpecific(r[7])?r[7]:"",days:Math.round((dt-today)/864e5)};
+      link:isSpecific(r[7])?r[7]:"",days:Math.round((dt-today)/864e5),
+      pos:COORDS[r[0]+"|"+r[1]]?{lat:COORDS[r[0]+"|"+r[1]][0],lon:COORDS[r[0]+"|"+r[1]][1]}:null,
+      id:r[0]+"|"+r[1]+"|"+r[4]+"|"+(r[5]||"")};
   });
+  function setDist(){ data.forEach(function(d){ d.km = d.pos ? Math.round(km(origin,d.pos)) : null; }); }
+  setDist();
   var TOTAL=data.length;
   function cnt(f){ return data.filter(f).length; }
 
@@ -274,6 +315,7 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);f
     if(st.q){ var q=norm(st.q); f=f.filter(function(d){return norm(d.nome+" "+d.ev).indexOf(q)>=0}) }
     if(st.prox>0) f=f.filter(function(d){return d.days<=st.prox});
     if(st.shows) f=f.filter(function(d){return d.shows});
+    if(st.raio>0) f=f.filter(function(d){return d.km!==null && d.km<=st.raio});
     return f;
   }
   function card(d,i){
@@ -282,16 +324,16 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);f
     return '<article class="card'+(d.days===0?' today':'')+'" style="--c:'+COR[d.tipo]+';--i:'+Math.min(i,14)+'">'+
       '<div class="card-top"><h3 class="city">'+esc(d.nome)+'</h3><span class="days">'+days+'</span></div>'+
       '<div class="ev">'+esc(d.ev)+'</div>'+
-      '<div class="where">'+d.uf+' · '+esc(d.reg)+' · '+esc(d.nUF)+'</div>'+
+      '<div class="where">'+d.uf+' · '+esc(d.reg)+' · '+esc(d.nUF)+(d.km!==null?'<span class="dist">· '+d.km.toLocaleString("pt-BR")+' km</span>':'')+'</div>'+
       '<div class="when">'+d.dia+' de '+MES[d.mes]+'</div>'+
       '<div class="tags"><span class="tag">'+TIPO[d.tipo]+'</span>'+(d.shows?'<span class="show">Shows nacionais</span>':'')+'</div>'+
-      link+'</article>';
+      '<div class="card-actions">'+link+'<button class="follow" data-id="'+esc(d.id)+'" aria-pressed="'+isFollowed(d.id)+'" aria-label="Acompanhar notícias de '+esc(d.ev)+'" title="Acompanhar notícias">★</button></div></article>';
   }
   function countMeta(f){
     $("meta").innerHTML = '<span><b>'+f.length+'</b> eventos</span><span><b>'+f.filter(function(d){return d.shows}).length+'</b> com shows</span><span><b>'+f.filter(function(d){return d.days<=7}).length+'</b> em 7 dias</span>';
   }
   function renderList(){
-    var f=filtered().sort(function(a,b){return a.days-b.days});
+    var f=filtered().sort(st.ordem==="dist"?function(a,b){return (a.km-b.km)||(a.days-b.days)}:function(a,b){return a.days-b.days});
     countMeta(f);
     $("grid").innerHTML = f.length? f.map(card).join("") : '<div class="empty">Nada com esses filtros.</div>';
   }
@@ -336,12 +378,12 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);f
   function setTab(t){
     st.tab=t;
     Array.prototype.forEach.call(document.querySelectorAll("#tabs button"),function(b){b.setAttribute("aria-selected", b.dataset.tab===t)});
-    $("vLista").hidden = t!=="lista"; $("vCal").hidden = t!=="cal";
-    t==="lista"?renderList():renderCal();
+    $("vLista").hidden = t!=="lista"; $("vCal").hidden = t!=="cal"; $("vSeg").hidden = t!=="seg";
+    refresh();
   }
   Array.prototype.forEach.call(document.querySelectorAll("#tabs button"),function(b){b.onclick=function(){setTab(b.dataset.tab)}});
   $("goCal").onclick=function(){ setTab("cal"); $("lista").scrollIntoView({behavior:"smooth"}); };
-  function refresh(){ st.tab==="lista"?renderList():renderCal(); }
+  function refresh(){ if(st.tab==="lista") renderList(); else if(st.tab==="cal") renderCal(); else renderFeed(); }
   $("fTipo").onchange=function(){st.tipo=this.value;refresh()};
   $("fReg").onchange=function(){st.reg=this.value;
     Array.prototype.forEach.call($("fUF").options,function(o){
@@ -357,6 +399,80 @@ footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);f
     st.prox=+b.dataset.d; Array.prototype.forEach.call(this.children,function(c){c.setAttribute("aria-pressed",c===b)}); refresh(); };
   $("prev").onclick=function(){ st.m--; if(st.m<0){st.m=11;st.y--} renderCal(); };
   $("next").onclick=function(){ st.m++; if(st.m>11){st.m=0;st.y++} renderCal(); };
+
+  $("fRaio").onchange=function(){st.raio=+this.value;refresh()};
+  $("fOrdem").onchange=function(){st.ordem=this.value;refresh()};
+  var FLORIPA={lat:-27.5954,lon:-48.548,label:"Florianópolis/SC"};
+  $("useGeo").onclick=function(){
+    var btn=this;
+    if(origin.label!==FLORIPA.label){ origin=FLORIPA; $("origem").textContent=origin.label; btn.textContent="usar minha localização"; setDist(); refresh(); return; }
+    if(!navigator.geolocation){ btn.textContent="localização indisponível"; return; }
+    btn.textContent="localizando…";
+    navigator.geolocation.getCurrentPosition(function(p){
+      origin={lat:p.coords.latitude,lon:p.coords.longitude,label:"sua localização"};
+      $("origem").textContent=origin.label; btn.textContent="voltar para Florianópolis";
+      setDist(); refresh();
+    },function(){ btn.textContent="usar minha localização (permissão negada)"; },{timeout:10000});
+  };
+
+  // ---- acompanhar eventos ----
+  var followed = store("seguindo") || [];
+  var seen = store("vistos") || {};
+  var feedCache = {};
+  function isFollowed(id){ return followed.indexOf(id)>=0; }
+  function byId(id){ return data.find(function(d){return d.id===id}); }
+  function queryFor(d){ return d.tipo==="aniv" ? '"aniversário de '+d.nome+'"' : '"'+d.ev+'" '+d.nome; }
+  document.addEventListener("click",function(e){
+    var b=e.target.closest(".follow"); if(!b) return;
+    var id=b.dataset.id, i=followed.indexOf(id);
+    if(i>=0){ followed.splice(i,1); delete seen[id]; }
+    else { followed.push(id); if(window.Notification && Notification.permission==="default") Notification.requestPermission(); }
+    store("seguindo",followed); store("vistos",seen);
+    Array.prototype.forEach.call(document.querySelectorAll('.follow[data-id="'+CSS.escape(id)+'"]'),function(x){x.setAttribute("aria-pressed",i<0)});
+    if(i<0) checkNews(true);
+    if(st.tab==="seg") renderFeed();
+  });
+  function fetchNews(d){
+    return fetch("/api/news?q="+encodeURIComponent(queryFor(d))+"&k="+encodeURIComponent(d.tipo==="aniv"?d.nome:d.ev+"|"+d.nome)).then(function(r){return r.ok?r.json():{items:[]}}).catch(function(){return {items:[]}});
+  }
+  function checkNews(notify){
+    if(!followed.length){ updateBadge(); return Promise.resolve(); }
+    return Promise.all(followed.map(function(id){
+      var d=byId(id); if(!d) return null;
+      return fetchNews(d).then(function(res){
+        feedCache[id]=res.items||[];
+        var old=seen[id]||[], fresh=feedCache[id].filter(function(n){return old.indexOf(n.link)<0});
+        if(!seen[id]){ seen[id]=feedCache[id].map(function(n){return n.link}); return null; }
+        return fresh.length?{d:d,n:fresh}:null;
+      });
+    })).then(function(results){
+      store("vistos",seen); updateBadge();
+      var news=results.filter(Boolean);
+      if(notify && news.length && window.Notification && Notification.permission==="granted"){
+        news.forEach(function(x){ new Notification("Novidade: "+x.d.ev, {body:x.n[0].title}); });
+      }
+      if(st.tab==="seg") renderFeed();
+    });
+  }
+  function newCount(){ return followed.reduce(function(t,id){ var s=seen[id]||[]; return t+(feedCache[id]||[]).filter(function(n){return s.indexOf(n.link)<0}).length; },0); }
+  function updateBadge(){ var n=newCount(), b=$("newCount"); b.hidden=!n; b.textContent=n; }
+  function renderFeed(){
+    countMeta(followed.map(byId).filter(Boolean));
+    if(!followed.length){ $("feed").innerHTML='<div class="empty">Toque na ★ de um evento para acompanhar. As notícias novas aparecem aqui e, com a página aberta, geram notificação.</div>'; return; }
+    $("feed").innerHTML=followed.map(byId).filter(Boolean).map(function(d){
+      var items=feedCache[d.id], s=seen[d.id]||[];
+      var list = items===undefined ? '<li>carregando…</li>' : items.length ? items.slice(0,8).map(function(n){
+        var dt=n.pub?new Date(n.pub).toLocaleDateString("pt-BR"):"";
+        return '<li class="'+(s.indexOf(n.link)<0?'new':'')+'"><a href="'+esc(n.link)+'" target="_blank" rel="noopener">'+esc(n.title)+'</a><small>'+dt+'</small></li>';
+      }).join("") : '<li>Nenhuma notícia nos últimos 30 dias.</li>';
+      return '<div class="feed-item"><div class="feed-head"><h3>'+esc(d.ev)+'</h3><span class="geo">'+esc(d.nome)+'/'+d.uf+' · '+d.dia+' de '+MES[d.mes]+
+        ' <button class="follow" data-id="'+esc(d.id)+'" aria-pressed="true" aria-label="Deixar de acompanhar" title="Deixar de acompanhar">★</button></span></div><ul class="news">'+list+'</ul></div>';
+    }).join("");
+    // ao abrir a aba, marca como lidas
+    setTimeout(function(){ followed.forEach(function(id){ if(feedCache[id]) seen[id]=feedCache[id].map(function(n){return n.link}); }); store("vistos",seen); updateBadge(); },1500);
+  }
+  checkNews(true);
+  setInterval(function(){ checkNews(true); }, 30*60*1000);
 
   renderList();
   setTab("lista");
