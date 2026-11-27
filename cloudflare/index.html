@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Eventos Municipais</title>
+<meta name="description" content="Aniversários, expos agro, rodeios e festivais com shows nacionais em cidades brasileiras.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#f4f1ea;--card:#fbfaf6;--ink:#161412;--sec:#4a453e;--muted:#7d766b;--line:#d8d2c5;
+  --aniv:#b4432a;--expo:#2f6b4f;--fest:#8a6a12;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;--body:"DM Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{overflow-x:hidden}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 var(--body);min-height:100vh;overflow-x:hidden}
+button,select,input,a{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1140px;margin:0 auto;padding:0 20px}
+
+/* hero */
+.hero{padding:64px 20px 28px}
+.date{font-size:13px;color:var(--muted);letter-spacing:.02em;opacity:0;animation:fade .6s ease .05s forwards}
+h1{font:700 clamp(44px,8vw,92px)/.98 var(--display);letter-spacing:-.03em;margin:14px 0 16px;max-width:12ch}
+h1 span{display:inline-block;opacity:0;transform:translateY(18px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+.lead{max-width:52ch;color:var(--sec);font-size:17px;margin:0;opacity:0;animation:fade .7s ease .55s forwards}
+.cta{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;opacity:0;animation:fade .7s ease .7s forwards}
+.btn{border:1px solid var(--ink);background:transparent;border-radius:999px;padding:11px 20px;font-weight:700;cursor:pointer;text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.btn.solid{background:var(--ink);color:var(--paper)}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn.solid:hover{background:var(--sec)}
+
+/* stats */
+.rings{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:40px}
+.ring{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:center;
+  opacity:0;animation:fade .6s ease forwards;animation-delay:calc(.9s + var(--d)*.1s)}
+.ring svg{width:56px;height:56px;flex:none;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:5}
+.ring .track{stroke:#e6e0d4}
+.ring .bar{stroke:var(--c);stroke-linecap:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:fill 1.4s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(1.1s + var(--d)*.1s)}
+@keyframes fill{to{stroke-dashoffset:var(--off)}}
+.ring b{display:block;font:700 26px/1 var(--display);font-variant-numeric:tabular-nums}
+.ring span{font-size:12px;color:var(--muted)}
+
+/* ticker */
+.ticker{margin-top:28px;overflow:hidden;background:var(--ink);color:var(--paper);padding:11px 0}
+.ticker-track{display:flex;gap:38px;width:max-content;animation:marq 40s linear infinite;font:500 14px var(--body)}
+.ticker:hover .ticker-track{animation-play-state:paused}
+.ticker-item{white-space:nowrap}
+.ticker-item em{font-style:normal;font-weight:700;margin-right:8px;opacity:.6}
+.ticker-item .s{margin-left:8px;opacity:.6}
+@keyframes marq{to{transform:translateX(-50%)}}
+
+/* controls */
+.controls{position:sticky;top:0;z-index:20;margin-top:40px;padding:14px 0;background:var(--paper);border-bottom:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--card)}
+.seg button{background:none;border:0;padding:8px 16px;border-radius:999px;cursor:pointer;font-weight:700;font-size:14px;min-height:40px;color:var(--muted)}
+.seg button[aria-selected=true]{background:var(--ink);color:var(--paper)}
+select,.search{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:9px 15px;min-height:42px;font-size:14px;color:var(--ink);outline:none}
+select:focus,.search:focus{border-color:var(--ink)}
+.search{flex:1 1 220px;max-width:300px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-size:14px;color:var(--sec);cursor:pointer;min-height:42px}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip.shows[aria-pressed=true]{background:var(--fest);border-color:var(--fest)}
+.meta{display:flex;gap:18px;font-size:14px;color:var(--muted);margin:18px 0 4px;flex-wrap:wrap}
+.meta b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;padding:12px 0 64px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;border-top:3px solid var(--c);
+  opacity:0;animation:fade .5s ease forwards;animation-delay:calc(var(--i,0)*30ms)}
+.card-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.city{font:700 18px/1.2 var(--display);margin:0}
+.days{font-size:12px;font-weight:700;color:var(--c);white-space:nowrap;font-variant-numeric:tabular-nums}
+.card.today{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.card.today .days{color:var(--paper)}
+.ev{font-size:14px;color:var(--sec);margin-top:4px}
+.card.today .ev,.card.today .where{color:#d9d3c7}
+.where{font-size:12px;color:var(--muted);margin-top:8px}
+.when{font-weight:500;font-size:14px;margin-top:6px}
+.tags{display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;background:var(--c);color:#fff;letter-spacing:.02em}
+.show{font-size:12px;font-weight:700;color:var(--fest)}
+.card.today .show{color:#e8c76a}
+.link{display:inline-block;margin-top:12px;font-size:13px;font-weight:700;color:var(--c);min-height:32px}
+.card.today .link{color:#f0ede6}
+.na{display:block;margin-top:12px;font-size:12px;color:var(--muted);font-style:italic}
+.empty{grid-column:1/-1;text-align:center;padding:60px 0;color:var(--muted)}
+
+/* calendar */
+.cal{padding:12px 0 64px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-head h2{font:700 28px var(--display);margin:0;text-transform:capitalize}
+.nav{background:var(--card);border:1px solid var(--line);border-radius:999px;width:42px;height:42px;cursor:pointer;font-size:17px}
+.days-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.dow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:center;padding:4px}
+.cell{min-width:0;overflow:hidden;min-height:92px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px;
+  opacity:0;animation:fade .4s ease forwards;animation-delay:calc(var(--i)*8ms)}
+.cell.blank{background:transparent;border-color:transparent}
+.cell.today{border:2px solid var(--ink)}
+.cell .n{font-size:12px;font-weight:700;color:var(--muted)}
+.pill{display:block;width:100%;max-width:100%;font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--c);color:#fff;border:0;text-align:left;cursor:pointer}
+.more{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* footer */
+footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);font-size:13px}
+.legend{display:flex;gap:16px;flex-wrap:wrap}
+.legend span{display:inline-flex;gap:7px;align-items:center;color:var(--sec)}
+.legend i{width:10px;height:10px;border-radius:3px;background:var(--c)}
+
+/* tooltip */
+.tip{position:fixed;z-index:50;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;max-width:290px;
+  box-shadow:0 10px 30px -12px rgba(22,20,18,.25);opacity:0;pointer-events:none;transition:opacity .2s}
+.tip.on{opacity:1;pointer-events:auto}
+.tip h4{margin:0 0 6px;font:700 15px var(--display)}
+.tip div{font-size:13px;color:var(--sec);padding:3px 0}
+.tip a{color:var(--ink)}
+
+.dist{font-size:12px;color:var(--muted);margin-left:6px}
+.card.today .dist{color:#d9d3c7}
+.follow{background:none;border:1px solid var(--line);border-radius:999px;width:36px;height:36px;cursor:pointer;font-size:16px;line-height:1;color:var(--muted);flex:none}
+.follow[aria-pressed=true]{background:var(--fest);border-color:var(--fest);color:#fff}
+.card.today .follow{border-color:#4a453e;color:#d9d3c7}
+.card-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px}
+.card-actions .link,.card-actions .na{margin-top:0}
+.badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:var(--aniv);color:#fff;font-size:11px;line-height:18px;text-align:center}
+.geo{font-size:13px;color:var(--muted)}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;cursor:pointer;font-size:13px;min-height:32px}
+.feed{padding:12px 0 64px}
+.feed-item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.feed-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.feed-head h3{font:700 17px var(--display);margin:0}
+.news{list-style:none;padding:0;margin:10px 0 0}
+.news li{padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.news li.new::before{content:"novo";font-size:10px;font-weight:700;background:var(--aniv);color:#fff;border-radius:4px;padding:1px 5px;margin-right:6px}
+.news a{color:var(--ink)}
+.news small{display:block;color:var(--muted);font-size:12px}
+@keyframes fade{to{opacity:1}}
+@keyframes rise{to{opacity:1;transform:none}}
+
+@media (max-width:700px){
+  .hero{padding:40px 20px 20px}
+  .rings{grid-template-columns:repeat(2,1fr)}
+  .grid{grid-template-columns:1fr}
+  .search{max-width:none;flex-basis:100%}
+  .controls{position:static}
+  .cell{min-height:60px;padding:4px}
+  .pill{font-size:9px;padding:2px 4px}
+  .cal-head h2{font-size:22px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .ring .bar{stroke-dashoffset:var(--off)}
+  .date,.lead,.cta,.ring,.card,.cell,h1 span{opacity:1!important;transform:none!important}
+}
+</style>
+</head>
+<body>
+
+<main class="hero wrap" id="top">
+  <p class="date" id="todayLbl"></p>
+  <h1><span>Eventos</span> <span>municipais</span></h1>
+  <p class="lead">Aniversários, expos agro, rodeios e festivais com shows nacionais, com datas, regiões e links dos eventos.</p>
+  <div class="cta">
+    <a class="btn solid" href="#lista">Ver lista</a>
+    <button class="btn" id="goCal" type="button">Calendário</button>
+  </div>
+  <div class="rings" id="rings"></div>
+</main>
+
+<div class="ticker" aria-label="Próximos eventos"><div class="ticker-track" id="ticker"></div></div>
+
+<div class="wrap">
+  <div class="controls" id="lista">
+    <div class="row">
+      <div class="seg" role="tablist" id="tabs">
+        <button role="tab" aria-selected="true" data-tab="lista">Lista</button>
+        <button role="tab" aria-selected="false" data-tab="cal">Calendário</button>
+        <button role="tab" aria-selected="false" data-tab="seg">Acompanhando<span class="badge" id="newCount" hidden></span></button>
+      </div>
+      <select id="fTipo" aria-label="Tipo">
+        <option value="">Todos os tipos</option><option value="aniv">Aniversários</option><option value="expo">Expos agro</option><option value="fest">Festivais</option>
+      </select>
+      <select id="fReg" aria-label="Região">
+        <option value="">Todas as regiões</option><option value="N">Norte</option><option value="NE">Nordeste</option><option value="CO">Centro-Oeste</option><option value="SE">Sudeste</option><option value="S">Sul</option>
+      </select>
+      <select id="fUF" aria-label="Estado"><option value="">Todos os estados</option></select>
+      <input class="search" id="q" type="search" placeholder="Buscar cidade ou evento" aria-label="Buscar">
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="row" id="prox"></div>
+      <button class="chip shows" id="shows" aria-pressed="false">Só com shows nacionais</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <select id="fRaio" aria-label="Distância máxima">
+        <option value="0">Qualquer distância</option><option value="100">Até 100 km</option><option value="250">Até 250 km</option>
+        <option value="500">Até 500 km</option><option value="1000">Até 1.000 km</option><option value="2000">Até 2.000 km</option>
+      </select>
+      <select id="fOrdem" aria-label="Ordenar">
+        <option value="data">Ordenar por data</option><option value="dist">Ordenar por distância</option>
+      </select>
+      <span class="geo">a partir de <b id="origem">Florianópolis/SC</b> ·
+        <button class="linkbtn" id="useGeo" type="button">usar minha localização</button></span>
+    </div>
+  </div>
+
+  <div class="meta" id="meta"></div>
+  <section id="vLista"><div class="grid" id="grid"></div></section>
+  <section id="vSeg" class="feed" hidden><div id="feed"></div></section>
+  <section id="vCal" class="cal" hidden>
+    <div class="cal-head">
+      <button class="nav" id="prev" aria-label="Mês anterior">←</button>
+      <h2 id="mes"></h2>
+      <button class="nav" id="next" aria-label="Próximo mês">→</button>
+    </div>
+    <div class="days-grid" id="cal"></div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="legend">
+      <span style="--c:var(--aniv)"><i></i>Aniversário</span>
+      <span style="--c:var(--expo)"><i></i>Expo agro</span>
+      <span style="--c:var(--fest)"><i></i>Festival</span>
+    </div>
+    <p style="margin:14px 0 0">Dados de notícias e sites de prefeituras. Quando não há página específica do evento, aparece "link específico indisponível".</p>
+  </div>
+</footer>
+
+<div class="tip" id="tip" role="dialog" aria-live="polite"></div>
+
+<script src="dados.js"></script>
+<script src="coords.js"></script>
+<script>
+(function(){
+  "use strict";
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var MES = ["","janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  var DOW = ["dom","seg","ter","qua","qui","sex","sáb"];
+  var TIPO = {aniv:"Aniversário",expo:"Expo agro",fest:"Festival"};
+  var COR = {aniv:"var(--aniv)",expo:"var(--expo)",fest:"var(--fest)"};
+  var today = new Date(); today.setHours(0,0,0,0);
+  var st = {tipo:"",reg:"",uf:"",q:"",prox:0,shows:false,tab:"lista",y:today.getFullYear(),m:today.getMonth(),raio:0,ordem:"data"};
+  var origin = {lat:-27.5954,lon:-48.548,label:"Florianópolis/SC"};
+  function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)||"null"); localStorage.setItem(k,JSON.stringify(v)); }catch(e){ return null; } }
+  function km(a,b){ var R=6371,r=Math.PI/180,dl=(b.lat-a.lat)*r,dn=(b.lon-a.lon)*r;
+    var h=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)*Math.sin(dn/2); return 2*R*Math.asin(Math.sqrt(h)); }
+  var $ = function(id){return document.getElementById(id)};
+
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+  function isSpecific(u){ if(!u) return false; try{var x=new URL(u); return !(/\.gov\.br$/.test(x.hostname) && x.pathname.replace(/\//g,"").length<10);}catch(e){return false;} }
+  function nextDate(d,m){ var y=today.getFullYear(); var n=new Date(y,m-1,d); if(n<today) n=new Date(y+1,m-1,d); return n; }
+  function norm(s){return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")}
+
+  var data = EVENTOS.map(function(r){
+    var t=r[4], ev=r[5]||(t==="aniv"?"Aniversário de "+r[0]:"");
+    var dt=nextDate(r[2],r[3]);
+    return {nome:r[0],uf:r[1],reg:REGIOES[r[1]],nUF:NOMES_UF[r[1]],dia:r[2],mes:r[3],tipo:t,ev:ev,shows:!!r[6],
+      link:isSpecific(r[7])?r[7]:"",days:Math.round((dt-today)/864e5),
+      pos:COORDS[r[0]+"|"+r[1]]?{lat:COORDS[r[0]+"|"+r[1]][0],lon:COORDS[r[0]+"|"+r[1]][1]}:null,
+      id:r[0]+"|"+r[1]+"|"+r[4]+"|"+(r[5]||"")};
+  });
+  function setDist(){ data.forEach(function(d){ d.km = d.pos ? Math.round(km(origin,d.pos)) : null; }); }
+  setDist();
+  var TOTAL=data.length;
+  function cnt(f){ return data.filter(f).length; }
+
+  // stats rings
+  var R=24, C=2*Math.PI*R;
+  var rings=[
+    {k:"Eventos",v:TOTAL,p:1,c:"var(--ink)"},
+    {k:"Hoje",v:cnt(function(d){return d.days===0}),c:"var(--ink)"},
+    {k:"Com shows",v:cnt(function(d){return d.shows}),c:"var(--fest)"},
+    {k:"Expos e festivais",v:cnt(function(d){return d.tipo!=="aniv"}),c:"var(--expo)"}
+  ];
+  rings.forEach(function(r){ if(r.p===undefined) r.p=r.v/TOTAL; });
+  $("rings").innerHTML=rings.map(function(r,i){
+    var off=(C*(1-r.p)).toFixed(1);
+    return '<div class="ring" style="--d:'+i+';--c:'+r.c+'">'+
+      '<svg viewBox="0 0 56 56" aria-hidden="true"><circle class="track" cx="28" cy="28" r="'+R+'"/><circle class="bar" cx="28" cy="28" r="'+R+'" style="--len:'+C.toFixed(1)+';--off:'+off+'"/></svg>'+
+      '<div><b data-n="'+r.v+'">0</b><span>'+r.k+'</span></div></div>';
+  }).join("");
+  function countUp(el,to){
+    if(reduce){el.textContent=to;return;}
+    var t0=null,dur=1100;
+    function f(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1); el.textContent=Math.round(to*(1-Math.pow(1-p,3))); if(p<1)requestAnimationFrame(f); }
+    setTimeout(function(){requestAnimationFrame(f)},900);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-n]"),function(el){countUp(el,+el.dataset.n)});
+  $("todayLbl").textContent = today.getDate()+" de "+MES[today.getMonth()+1]+" de "+today.getFullYear();
+  Array.prototype.forEach.call(document.querySelectorAll("h1 span"),function(w,i){ w.style.animationDelay=(.1+i*.12)+"s"; });
+
+  // ticker
+  var up=data.slice().sort(function(a,b){return a.days-b.days}).slice(0,14);
+  var tk=up.map(function(d){return '<span class="ticker-item"><em>'+(d.days===0?"hoje":d.days+"d")+'</em>'+esc(d.nome)+'/'+d.uf+' · '+esc(d.ev)+(d.shows?'<span class="s">· shows nacionais</span>':'')+'</span>'}).join("");
+  $("ticker").innerHTML = tk+tk;
+
+  // filters
+  var ufs=[]; data.forEach(function(d){ if(ufs.indexOf(d.uf)<0) ufs.push(d.uf) });
+  ufs.sort(function(a,b){return NOMES_UF[a].localeCompare(NOMES_UF[b])});
+  $("fUF").insertAdjacentHTML("beforeend", ufs.map(function(u){return '<option value="'+u+'">'+esc(NOMES_UF[u])+'</option>'}).join(""));
+  [["0","Todos"],["7","7 dias"],["15","15 dias"],["30","30 dias"],["90","90 dias"]].forEach(function(p){
+    var b=document.createElement("button"); b.className="chip"; b.textContent=p[1]; b.dataset.d=p[0]; b.setAttribute("aria-pressed", p[0]==="0"); $("prox").appendChild(b);
+  });
+  function filtered(){
+    var f=data;
+    if(st.tipo) f=f.filter(function(d){return d.tipo===st.tipo});
+    if(st.reg) f=f.filter(function(d){return d.reg===st.reg});
+    if(st.uf) f=f.filter(function(d){return d.uf===st.uf});
+    if(st.q){ var q=norm(st.q); f=f.filter(function(d){return norm(d.nome+" "+d.ev).indexOf(q)>=0}) }
+    if(st.prox>0) f=f.filter(function(d){return d.days<=st.prox});
+    if(st.shows) f=f.filter(function(d){return d.shows});
+    if(st.raio>0) f=f.filter(function(d){return d.km!==null && d.km<=st.raio});
+    return f;
+  }
+  function card(d,i){
+    var days = d.days===0?"hoje":"em "+d.days+" d";
+    var link = d.link ? '<a class="link" href="'+esc(d.link)+'" target="_blank" rel="noopener">Página do evento ↗</a>' : '<span class="na">link específico indisponível</span>';
+    return '<article class="card'+(d.days===0?' today':'')+'" style="--c:'+COR[d.tipo]+';--i:'+Math.min(i,14)+'">'+
+      '<div class="card-top"><h3 class="city">'+esc(d.nome)+'</h3><span class="days">'+days+'</span></div>'+
+      '<div class="ev">'+esc(d.ev)+'</div>'+
+      '<div class="where">'+d.uf+' · '+esc(d.reg)+' · '+esc(d.nUF)+(d.km!==null?'<span class="dist">· '+d.km.toLocaleString("pt-BR")+' km</span>':'')+'</div>'+
+      '<div class="when">'+d.dia+' de '+MES[d.mes]+'</div>'+
+      '<div class="tags"><span class="tag">'+TIPO[d.tipo]+'</span>'+(d.shows?'<span class="show">Shows nacionais</span>':'')+'</div>'+
+      '<div class="card-actions">'+link+'<button class="follow" data-id="'+esc(d.id)+'" aria-pressed="'+isFollowed(d.id)+'" aria-label="Acompanhar notícias de '+esc(d.ev)+'" title="Acompanhar notícias">★</button></div></article>';
+  }
+  function countMeta(f){
+    $("meta").innerHTML = '<span><b>'+f.length+'</b> eventos</span><span><b>'+f.filter(function(d){return d.shows}).length+'</b> com shows</span><span><b>'+f.filter(function(d){return d.days<=7}).length+'</b> em 7 dias</span>';
+  }
+  function renderList(){
+    var f=filtered().sort(st.ordem==="dist"?function(a,b){return (a.km-b.km)||(a.days-b.days)}:function(a,b){return a.days-b.days});
+    countMeta(f);
+    $("grid").innerHTML = f.length? f.map(card).join("") : '<div class="empty">Nada com esses filtros.</div>';
+  }
+
+  // calendar
+  function renderCal(){
+    var f=filtered(); countMeta(f);
+    $("mes").textContent = MES[st.m+1]+" "+st.y;
+    var first=new Date(st.y,st.m,1).getDay(), days=new Date(st.y,st.m+1,0).getDate();
+    var by={}; f.forEach(function(d){ if(d.mes===st.m+1){ (by[d.dia]=by[d.dia]||[]).push(d) } });
+    var h=DOW.map(function(d){return '<div class="dow">'+d+'</div>'}).join("");
+    for(var b=0;b<first;b++) h+='<div class="cell blank"></div>';
+    for(var n=1;n<=days;n++){
+      var isT = n===today.getDate() && st.m===today.getMonth() && st.y===today.getFullYear();
+      var items=by[n]||[];
+      h+='<div class="cell'+(isT?' today':'')+'" style="--i:'+n+'"><div class="n">'+n+'</div>'+
+        items.slice(0,2).map(function(d){return '<button class="pill" style="--c:'+COR[d.tipo]+'" data-day="'+n+'">'+esc(d.tipo==="aniv"?d.nome:d.ev)+'</button>'}).join("")+
+        (items.length>2?'<div class="more">+'+(items.length-2)+' mais</div>':'')+'</div>';
+    }
+    $("cal").innerHTML=h;
+    window.__by = by;
+  }
+
+  // tooltip
+  var tip=$("tip");
+  function showTip(el,day){
+    var items=(window.__by||{})[day]||[];
+    tip.innerHTML='<h4>'+day+' de '+MES[st.m+1]+'</h4>'+items.map(function(d){return '<div><b style="color:'+COR[d.tipo]+'">'+TIPO[d.tipo]+'</b> · '+esc(d.nome)+'/'+d.uf+(d.link?' · <a href="'+esc(d.link)+'" target="_blank" rel="noopener">link</a>':'')+'</div>'}).join("");
+    tip.classList.add("on");
+    var r=el.getBoundingClientRect(), w=tip.offsetWidth, h2=tip.offsetHeight;
+    var x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8), y=r.bottom+8;
+    if(y+h2>innerHeight-8) y=r.top-h2-8;
+    tip.style.left=x+"px"; tip.style.top=y+"px";
+  }
+  document.addEventListener("click",function(e){
+    var p=e.target.closest(".pill");
+    if(p){ showTip(p,+p.dataset.day); return; }
+    if(!e.target.closest(".tip")) tip.classList.remove("on");
+  });
+
+  // tabs
+  function setTab(t){
+    st.tab=t;
+    Array.prototype.forEach.call(document.querySelectorAll("#tabs button"),function(b){b.setAttribute("aria-selected", b.dataset.tab===t)});
+    $("vLista").hidden = t!=="lista"; $("vCal").hidden = t!=="cal"; $("vSeg").hidden = t!=="seg";
+    refresh();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#tabs button"),function(b){b.onclick=function(){setTab(b.dataset.tab)}});
+  $("goCal").onclick=function(){ setTab("cal"); $("lista").scrollIntoView({behavior:"smooth"}); };
+  function refresh(){ if(st.tab==="lista") renderList(); else if(st.tab==="cal") renderCal(); else renderFeed(); }
+  $("fTipo").onchange=function(){st.tipo=this.value;refresh()};
+  $("fReg").onchange=function(){st.reg=this.value;
+    Array.prototype.forEach.call($("fUF").options,function(o){
+      if(!o.value||!st.reg){o.hidden=false;return}
+      var d=data.find(function(x){return x.uf===o.value}); o.hidden = !!d && d.reg!==st.reg; });
+    var cur=st.uf && data.find(function(x){return x.uf===st.uf});
+    if(cur && cur.reg!==st.reg){ st.uf=""; $("fUF").value=""; }
+    refresh()};
+  $("fUF").onchange=function(){st.uf=this.value;refresh()};
+  $("q").oninput=function(){st.q=this.value.trim();refresh()};
+  $("shows").onclick=function(){st.shows=!st.shows;this.setAttribute("aria-pressed",st.shows);refresh()};
+  $("prox").onclick=function(e){ var b=e.target.closest("button"); if(!b) return;
+    st.prox=+b.dataset.d; Array.prototype.forEach.call(this.children,function(c){c.setAttribute("aria-pressed",c===b)}); refresh(); };
+  $("prev").onclick=function(){ st.m--; if(st.m<0){st.m=11;st.y--} renderCal(); };
+  $("next").onclick=function(){ st.m++; if(st.m>11){st.m=0;st.y++} renderCal(); };
+
+  $("fRaio").onchange=function(){st.raio=+this.value;refresh()};
+  $("fOrdem").onchange=function(){st.ordem=this.value;refresh()};
+  var FLORIPA={lat:-27.5954,lon:-48.548,label:"Florianópolis/SC"};
+  $("useGeo").onclick=function(){
+    var btn=this;
+    if(origin.label!==FLORIPA.label){ origin=FLORIPA; $("origem").textContent=origin.label; btn.textContent="usar minha localização"; setDist(); refresh(); return; }
+    if(!navigator.geolocation){ btn.textContent="localização indisponível"; return; }
+    btn.textContent="localizando…";
+    navigator.geolocation.getCurrentPosition(function(p){
+      origin={lat:p.coords.latitude,lon:p.coords.longitude,label:"sua localização"};
+      $("origem").textContent=origin.label; btn.textContent="voltar para Florianópolis";
+      setDist(); refresh();
+    },function(){ btn.textContent="usar minha localização (permissão negada)"; },{timeout:10000});
+  };
+
+  // ---- acompanhar eventos ----
+  var followed = store("seguindo") || [];
+  var seen = store("vistos") || {};
+  var feedCache = {};
+  function isFollowed(id){ return followed.indexOf(id)>=0; }
+  function byId(id){ return data.find(function(d){return d.id===id}); }
+  function queryFor(d){ return d.tipo==="aniv" ? '"aniversário de '+d.nome+'"' : '"'+d.ev+'" '+d.nome; }
+  document.addEventListener("click",function(e){
+    var b=e.target.closest(".follow"); if(!b) return;
+    var id=b.dataset.id, i=followed.indexOf(id);
+    if(i>=0){ followed.splice(i,1); delete seen[id]; }
+    else { followed.push(id); if(window.Notification && Notification.permission==="default") Notification.requestPermission(); }
+    store("seguindo",followed); store("vistos",seen);
+    Array.prototype.forEach.call(document.querySelectorAll('.follow[data-id="'+CSS.escape(id)+'"]'),function(x){x.setAttribute("aria-pressed",i<0)});
+    if(i<0) checkNews(true);
+    if(st.tab==="seg") renderFeed();
+  });
+  function fetchNews(d){
+    return fetch("/api/news?q="+encodeURIComponent(queryFor(d))+"&k="+encodeURIComponent(d.tipo==="aniv"?d.nome:d.ev+"|"+d.nome)).then(function(r){return r.ok?r.json():{items:[]}}).catch(function(){return {items:[]}});
+  }
+  function checkNews(notify){
+    if(!followed.length){ updateBadge(); return Promise.resolve(); }
+    return Promise.all(followed.map(function(id){
+      var d=byId(id); if(!d) return null;
+      return fetchNews(d).then(function(res){
+        feedCache[id]=res.items||[];
+        var old=seen[id]||[], fresh=feedCache[id].filter(function(n){return old.indexOf(n.link)<0});
+        if(!seen[id]){ seen[id]=feedCache[id].map(function(n){return n.link}); return null; }
+        return fresh.length?{d:d,n:fresh}:null;
+      });
+    })).then(function(results){
+      store("vistos",seen); updateBadge();
+      var news=results.filter(Boolean);
+      if(notify && news.length && window.Notification && Notification.permission==="granted"){
+        news.forEach(function(x){ new Notification("Novidade: "+x.d.ev, {body:x.n[0].title}); });
+      }
+      if(st.tab==="seg") renderFeed();
+    });
+  }
+  function newCount(){ return followed.reduce(function(t,id){ var s=seen[id]||[]; return t+(feedCache[id]||[]).filter(function(n){return s.indexOf(n.link)<0}).length; },0); }
+  function updateBadge(){ var n=newCount(), b=$("newCount"); b.hidden=!n; b.textContent=n; }
+  function renderFeed(){
+    countMeta(followed.map(byId).filter(Boolean));
+    if(!followed.length){ $("feed").innerHTML='<div class="empty">Toque na ★ de um evento para acompanhar. As notícias novas aparecem aqui e, com a página aberta, geram notificação.</div>'; return; }
+    $("feed").innerHTML=followed.map(byId).filter(Boolean).map(function(d){
+      var items=feedCache[d.id], s=seen[d.id]||[];
+      var list = items===undefined ? '<li>carregando…</li>' : items.length ? items.slice(0,8).map(function(n){
+        var dt=n.pub?new Date(n.pub).toLocaleDateString("pt-BR"):"";
+        return '<li class="'+(s.indexOf(n.link)<0?'new':'')+'"><a href="'+esc(n.link)+'" target="_blank" rel="noopener">'+esc(n.title)+'</a><small>'+dt+'</small></li>';
+      }).join("") : '<li>Nenhuma notícia nos últimos 30 dias.</li>';
+      return '<div class="feed-item"><div class="feed-head"><h3>'+esc(d.ev)+'</h3><span class="geo">'+esc(d.nome)+'/'+d.uf+' · '+d.dia+' de '+MES[d.mes]+
+        ' <button class="follow" data-id="'+esc(d.id)+'" aria-pressed="true" aria-label="Deixar de acompanhar" title="Deixar de acompanhar">★</button></span></div><ul class="news">'+list+'</ul></div>';
+    }).join("");
+    // ao abrir a aba, marca como lidas
+    setTimeout(function(){ followed.forEach(function(id){ if(feedCache[id]) seen[id]=feedCache[id].map(function(n){return n.link}); }); store("vistos",seen); updateBadge(); },1500);
+  }
+  checkNews(true);
+  setInterval(function(){ checkNews(true); }, 30*60*1000);
+
+  renderList();
+  setTab("lista");
+})();
+</script>
+</body>
+</html>
